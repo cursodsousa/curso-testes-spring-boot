@@ -45,4 +45,25 @@ public class CarroController {
     public ResponseEntity<List<CarroEntity>> listar(){
         return ResponseEntity.ok(service.listarTodos());
     }
+
+    @PutMapping("{id}")
+    public ResponseEntity<Void> atualizar(
+            @PathVariable Long id, @RequestBody CarroEntity dadosAtualizados){
+        try {
+            service.atualizar(id, dadosAtualizados);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
+        try {
+            service.deletar(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

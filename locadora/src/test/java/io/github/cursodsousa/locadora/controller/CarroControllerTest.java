@@ -4,8 +4,6 @@ import io.github.cursodsousa.locadora.entity.CarroEntity;
 import io.github.cursodsousa.locadora.model.exception.EntityNotFoundException;
 import io.github.cursodsousa.locadora.service.CarroService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -13,11 +11,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +35,7 @@ public class CarroControllerTest {
         CarroEntity carro = new CarroEntity(
                 1L, "Honda Civic", 150, 2027);
 
-        when(carroService.salvar(Mockito.any())).thenReturn(carro);
+        when(carroService.salvar(any())).thenReturn(carro);
 
         String json = """
                 {
@@ -66,7 +63,7 @@ public class CarroControllerTest {
 
     @Test
     void deveObterDetalhesCarro() throws Exception {
-        when(carroService.buscarPorId(Mockito.any())).thenReturn(new CarroEntity(
+        when(carroService.buscarPorId(any())).thenReturn(new CarroEntity(
                 1L, "Civic", 250, 2028
         ));
 
@@ -83,7 +80,7 @@ public class CarroControllerTest {
 
     @Test
     void deveRetornarNotFoundAoTentarObterDetalhesCarroInexistente() throws Exception {
-        when(carroService.buscarPorId(Mockito.any())).thenThrow(EntityNotFoundException.class);
+        when(carroService.buscarPorId(any())).thenThrow(EntityNotFoundException.class);
 
         mvc.perform(
                 MockMvcRequestBuilders.get("/carros/1")
@@ -105,5 +102,62 @@ public class CarroControllerTest {
         ).andExpect(status().isOk())
          .andExpect(jsonPath("$[0].modelo").value("Argo"))
          .andExpect(jsonPath("$[1].modelo").value("Celta"));
+    }
+
+    @Test
+    void deveAtualizarUmCarro() throws Exception {
+        when(carroService.atualizar(any(), any()))
+                .thenReturn(new CarroEntity(1L, "Celta", 100, 2025));
+
+        String json = """
+                {
+                    "modelo": "Celta",
+                    "valorDiaria": 100,
+                    "ano": 2025
+                }
+        """;
+
+        mvc.perform(
+                MockMvcRequestBuilders.put("/carros/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+        ).andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoTentarAtualizarCarroInexistente() throws Exception {
+        when(carroService.atualizar(any(), any()))
+                .thenThrow(EntityNotFoundException.class);
+
+        String json = """
+                {
+                    "modelo": "Celta",
+                    "valorDiaria": 100,
+                    "ano": 2025
+                }
+        """;
+
+        mvc.perform(
+                MockMvcRequestBuilders.put("/carros/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+        ).andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    void deveDeletarUmCarro() throws Exception {
+        doNothing().when(carroService).deletar(any());
+
+        mvc.perform(MockMvcRequestBuilders.delete("/carros/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoDeletarUmCarroInexistente() throws Exception {
+        doThrow(EntityNotFoundException.class).when(carroService).deletar(any());
+
+        mvc.perform(MockMvcRequestBuilders.delete("/carros/1"))
+                .andExpect(status().isNotFound());
     }
 }
