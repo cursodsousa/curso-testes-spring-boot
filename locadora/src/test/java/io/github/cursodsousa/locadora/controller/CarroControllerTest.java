@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.List;
+
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -87,5 +89,21 @@ public class CarroControllerTest {
                 MockMvcRequestBuilders.get("/carros/1")
         ).andExpect(status().isNotFound());
 
+    }
+
+    @Test
+    void deveListarCarros() throws Exception {
+        var listagem = List.of(
+                new CarroEntity(1L, "Argo", 150, 2025),
+                new CarroEntity(2L, "Celta", 80, 2015)
+        );
+
+        when(carroService.listarTodos()).thenReturn(listagem);
+
+        mvc.perform(
+                MockMvcRequestBuilders.get("/carros")
+        ).andExpect(status().isOk())
+         .andExpect(jsonPath("$[0].modelo").value("Argo"))
+         .andExpect(jsonPath("$[1].modelo").value("Celta"));
     }
 }
