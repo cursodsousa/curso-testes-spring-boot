@@ -1,6 +1,7 @@
 package io.github.cursodsousa.locadora.controller;
 
 import io.github.cursodsousa.locadora.entity.CarroEntity;
+import io.github.cursodsousa.locadora.model.exception.EntityNotFoundException;
 import io.github.cursodsousa.locadora.service.CarroService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -58,6 +59,33 @@ public class CarroControllerTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.modelo").value("Honda Civic"));
+
+    }
+
+    @Test
+    void deveObterDetalhesCarro() throws Exception {
+        when(carroService.buscarPorId(Mockito.any())).thenReturn(new CarroEntity(
+                1L, "Civic", 250, 2028
+        ));
+
+
+        mvc.perform(
+            MockMvcRequestBuilders.get("/carros/1")
+        ).andExpect(status().isOk())
+         .andExpect(jsonPath("$.id").value(1))
+         .andExpect(jsonPath("$.modelo").value("Civic"))
+         .andExpect(jsonPath("$.valorDiaria").value(250))
+         .andExpect(jsonPath("$.ano").value(2028));
+
+    }
+
+    @Test
+    void deveRetornarNotFoundAoTentarObterDetalhesCarroInexistente() throws Exception {
+        when(carroService.buscarPorId(Mockito.any())).thenThrow(EntityNotFoundException.class);
+
+        mvc.perform(
+                MockMvcRequestBuilders.get("/carros/1")
+        ).andExpect(status().isNotFound());
 
     }
 }
